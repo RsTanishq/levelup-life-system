@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Award, Lock, Check, Sparkles, Trophy, Star } from "lucide-react";
 import { pushSystemNotification } from "@/components/SystemNotifications";
+import { useQuery } from "@tanstack/react-query";
+import { api, authStorage } from "@/services/api";
 
 type Achievement = {
   title: string;
@@ -91,6 +93,23 @@ const Card = ({ a, status }: { a: Achievement; status: "unlocked" | "progress" |
 
 const Achievements = () => {
   const [demoCount, setDemoCount] = useState(0);
+  const { data } = useQuery({
+    queryKey: ["achievements"],
+    queryFn: api.getAchievements,
+    enabled: authStorage.hasToken(),
+    retry: false,
+  });
+
+  const apiUnlocked: Achievement[] =
+    data
+      ?.filter((a) => a.unlocked)
+      .map((a) => ({
+        title: a.title,
+        desc: a.description,
+        xp: a.xpReward ?? 0,
+        icon: a.icon || "🏆",
+        rare: Boolean(a.rare),
+      })) ?? [];
 
   const triggerUnlockDemo = () => {
     setDemoCount((c) => c + 1);
@@ -104,7 +123,8 @@ const Achievements = () => {
     });
   };
 
-  const total = unlocked.length + inProgress.length + locked.length;
+  const shownUnlocked = apiUnlocked.length ? apiUnlocked : unlocked;
+  const total = shownUnlocked.length + inProgress.length + locked.length;
 
   return (
     <div className="space-y-6">
@@ -115,7 +135,7 @@ const Achievements = () => {
           </div>
           <div>
             <h1 className="font-heading text-2xl font-bold text-foreground">Achievements</h1>
-            <p className="text-sm text-muted-foreground">{unlocked.length} of {total} unlocked</p>
+            <p className="text-sm text-muted-foreground">{shownUnlocked.length} of {total} unlocked</p>
           </div>
         </div>
         <button
@@ -129,7 +149,7 @@ const Achievements = () => {
       <section>
         <h3 className="font-heading text-sm font-bold text-neon-green uppercase tracking-wider mb-3">Unlocked</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {unlocked.map((a) => <Card key={a.title} a={a} status="unlocked" />)}
+          {shownUnlocked.map((a) => <Card key={a.title} a={a} status="unlocked" />)}
         </div>
       </section>
 

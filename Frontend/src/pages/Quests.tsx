@@ -1,6 +1,8 @@
 import QuestCard from "@/components/QuestCard";
 import { Swords, Calendar } from "lucide-react";
 import { usePlayerStore } from "@/lib/store";
+import { useQuery } from "@tanstack/react-query";
+import { api, authStorage } from "@/services/api";
 
 const defaultQuests = [
   { title: "Study for 45 minutes", xp: 50, coins: 10, stat: "+2 Knowledge" },
@@ -14,7 +16,23 @@ const defaultQuests = [
 
 const Quests = () => {
   const { selectedPath } = usePlayerStore();
-  const quests = selectedPath ? selectedPath.quests : defaultQuests;
+  const { data } = useQuery({
+    queryKey: ["daily-quests"],
+    queryFn: api.getDailyQuests,
+    enabled: authStorage.hasToken() && !selectedPath,
+    retry: false,
+  });
+
+  const quests = selectedPath
+    ? selectedPath.quests
+    : data?.length
+      ? data.map((q) => ({
+          title: q.title,
+          xp: q.xpReward,
+          coins: q.coinReward,
+          stat: q.statReward ? `+${q.statReward.amount ?? 0} ${q.statReward.stat}` : "+0",
+        }))
+      : defaultQuests;
 
   return (
     <div className="space-y-6">

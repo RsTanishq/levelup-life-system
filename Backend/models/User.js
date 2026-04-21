@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const statsSchema = new mongoose.Schema({
   strength: { type: Number, default: 0 },
@@ -9,6 +9,14 @@ const statsSchema = new mongoose.Schema({
   creativity: { type: Number, default: 0 },
   communication: { type: Number, default: 0 }
 });
+
+const completedQuestSchema = new mongoose.Schema(
+  {
+    questId: { type: mongoose.Schema.Types.ObjectId, ref: "Quest", required: true },
+    completedAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
 
 const userSchema = new mongoose.Schema(
   {
@@ -56,10 +64,9 @@ const userSchema = new mongoose.Schema(
 
     stats: statsSchema,
 
-    streak: {
-      current: { type: Number, default: 0 },
-      longest: { type: Number, default: 0 }
-    },
+    streak: { type: Number, default: 0 },
+    bestStreak: { type: Number, default: 0 },
+    lastActivityDate: { type: Date, default: null },
 
     guild: {
       type: mongoose.Schema.Types.ObjectId,
@@ -79,9 +86,14 @@ const userSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
       }
-    ]
+    ],
+
+    friendRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    unlockedAchievements: [{ type: mongoose.Schema.Types.ObjectId, ref: "Achievement" }],
+    unlockedRewards: [{ type: mongoose.Schema.Types.ObjectId, ref: "Reward" }],
+    completedQuests: [completedQuestSchema]
   },
   { timestamps: true }
 );
 
-export default mongoose.model("User", userSchema);
+module.exports = mongoose.model("User", userSchema);

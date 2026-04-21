@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Sword, Brain, Sparkles, Shield, Heart, Flame, MessageCircle, Coins } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import StatCard from "@/components/StatCard";
 import XPBar from "@/components/XPBar";
 import LevelUpPopup from "@/components/LevelUpPopup";
@@ -8,6 +9,7 @@ import AICoach from "@/components/AICoach";
 import NotificationCenter from "@/components/NotificationCenter";
 import { triggerDemoNotifications } from "@/components/SystemNotifications";
 import { usePlayerStore } from "@/lib/store";
+import { api, authStorage } from "@/services/api";
 
 const statIcons = { Strength: Sword, Focus: Brain, Knowledge: Sparkles, Discipline: Shield, Health: Heart, Creativity: Flame, Communication: MessageCircle };
 const statColors: Record<string, string> = { Strength: "red", Focus: "blue", Knowledge: "cyan", Discipline: "purple", Health: "green", Creativity: "orange", Communication: "gold" };
@@ -25,6 +27,21 @@ const defaultStats = [
 const Dashboard = () => {
   const [showLevelUp, setShowLevelUp] = useState(false);
   const { hunterName, selectedPath } = usePlayerStore();
+  const hasToken = authStorage.hasToken();
+
+  const { data: statsData } = useQuery({
+    queryKey: ["user-stats"],
+    queryFn: api.getUserStats,
+    enabled: hasToken && !selectedPath,
+    retry: false,
+  });
+
+  const { data: progressData } = useQuery({
+    queryKey: ["xp-progress"],
+    queryFn: api.getLevelProgress,
+    enabled: hasToken,
+    retry: false,
+  });
 
   const stats = selectedPath
     ? Object.entries(selectedPath.stats).map(([name, value]) => ({
@@ -35,7 +52,16 @@ const Dashboard = () => {
         color: statColors[name] || "blue",
         increase: Math.floor(Math.random() * 4) + 1,
       }))
-    : defaultStats;
+    : statsData?.stats
+      ? Object.entries(statsData.stats).map(([name, value]) => ({
+          name: name.charAt(0).toUpperCase() + name.slice(1),
+          value: Number(value),
+          maxValue: 100,
+          icon: statIcons[name as keyof typeof statIcons] || Sparkles,
+          color: statColors[name] || "blue",
+          increase: Math.floor(Math.random() * 4) + 1,
+        }))
+      : defaultStats;
 
   const displayName = hunterName || "Hunter";
 
@@ -60,7 +86,7 @@ const Dashboard = () => {
         <div className="flex items-center gap-2 flex-wrap">
           <div className="glass-panel px-3 py-2 flex items-center gap-2">
             <Coins className="w-4 h-4 text-neon-gold" />
-            <span className="font-heading font-bold text-neon-gold text-sm">145</span>
+            <span className="font-heading font-bold text-neon-gold text-sm">{statsData?.coins ?? 145}</span>
           </div>
           <NotificationCenter />
           <button onClick={() => triggerDemoNotifications()} className="px-3 py-2 rounded-lg glass-panel neon-border text-[10px] font-heading font-bold text-primary hover:bg-primary/10 transition-colors uppercase">
@@ -72,7 +98,11 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <XPBar current={selectedPath ? 150 : 3450} max={selectedPath ? 500 : 5000} level={selectedPath ? 1 : 24} />
+      <XPBar
+        current={selectedPath ? 150 : progressData?.progressXP ?? 3450}
+        max={selectedPath ? 500 : progressData?.requiredXP ?? 5000}
+        level={selectedPath ? 1 : progressData?.level ?? 24}
+      />
 
       {selectedPath && (
         <div className="glass-panel p-4 neon-border">

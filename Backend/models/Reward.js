@@ -1,9 +1,10 @@
 // models/Reward.js
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const rewardSchema = new mongoose.Schema(
   {
     title: String,
+    name: String,
 
     description: String,
 
@@ -13,15 +14,21 @@ const rewardSchema = new mongoose.Schema(
     },
 
     requiredLevel: Number,
+    levelRequired: Number,
 
     requiredCoins: Number,
+    coinCost: Number,
 
     isPhysical: {
       type: Boolean,
       default: false
+    },
+    available: {
+      type: Boolean,
+      default: true
     }
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Reward", rewardSchema);
+module.exports = mongoose.model("Reward", rewardSchema);

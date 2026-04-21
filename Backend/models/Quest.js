@@ -1,5 +1,5 @@
 // models/Quest.js
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const questSchema = new mongoose.Schema(
   {
@@ -18,7 +18,7 @@ const questSchema = new mongoose.Schema(
 
     statReward: {
       stat: String,
-      value: Number
+      amount: Number
     },
 
     type: {
@@ -29,9 +29,21 @@ const questSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true
+    },
+    activeDate: {
+      type: Date,
+      default: Date.now
+    },
+    expiresAt: {
+      type: Date,
+      default: () => {
+        const d = new Date();
+        d.setDate(d.getDate() + 1);
+        return d;
+      }
     }
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Quest", questSchema);
+module.exports = mongoose.model("Quest", questSchema);

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const achievementSchema = new mongoose.Schema(
   {
@@ -10,9 +10,11 @@ const achievementSchema = new mongoose.Schema(
 
     condition: String,
 
-    xpReward: Number
+    xpReward: Number,
+    coinReward: Number,
+    trigger: String
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Achievement", achievementSchema);
+module.exports = mongoose.model("Achievement", achievementSchema);

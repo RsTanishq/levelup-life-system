@@ -1,5 +1,5 @@
 // models/Message.js
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const messageSchema = new mongoose.Schema(
   {
@@ -8,19 +8,19 @@ const messageSchema = new mongoose.Schema(
       ref: "User"
     },
 
-    receiver: {
+    recipient: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User"
     },
 
     content: String,
 
-    isRead: {
-      type: Boolean,
-      default: false
+    readAt: {
+      type: Date,
+      default: null
     }
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Message", messageSchema);
+module.exports = mongoose.model("Message", messageSchema);

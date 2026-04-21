@@ -1,5 +1,7 @@
 import RewardCard from "@/components/RewardCard";
 import { Gift } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { api, authStorage } from "@/services/api";
 
 const digitalRewards = [
   { name: "Shadow Hunter Badge", type: "Badge", requiredLevel: 10, requiredCoins: 100, unlocked: true },
@@ -16,6 +18,25 @@ const physicalRewards = [
 ];
 
 const Rewards = () => {
+  const { data } = useQuery({
+    queryKey: ["rewards"],
+    queryFn: api.getRewards,
+    enabled: authStorage.hasToken(),
+    retry: false,
+  });
+
+  const mappedRewards = data?.map((r) => ({
+    name: r.name || r.title,
+    type: r.type,
+    requiredLevel: r.levelRequired ?? r.requiredLevel ?? 1,
+    requiredCoins: r.coinCost ?? r.requiredCoins ?? 0,
+    unlocked: false,
+    isPhysical: Boolean(r.isPhysical),
+  }));
+
+  const digital = mappedRewards?.filter((r) => !r.isPhysical) || digitalRewards;
+  const physical = mappedRewards?.filter((r) => r.isPhysical) || physicalRewards;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -31,14 +52,14 @@ const Rewards = () => {
       <div>
         <h2 className="font-heading text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">Digital Rewards</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {digitalRewards.map((r, i) => <RewardCard key={i} {...r} />)}
+          {digital.map((r, i) => <RewardCard key={i} {...r} />)}
         </div>
       </div>
 
       <div>
         <h2 className="font-heading text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">Physical Rewards</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {physicalRewards.map((r, i) => <RewardCard key={i} {...r} />)}
+          {physical.map((r, i) => <RewardCard key={i} {...r} />)}
         </div>
       </div>
     </div>

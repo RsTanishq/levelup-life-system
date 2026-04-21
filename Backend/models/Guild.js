@@ -1,5 +1,5 @@
 // models/Guild.js
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const guildSchema = new mongoose.Schema(
   {
@@ -9,53 +9,47 @@ const guildSchema = new mongoose.Schema(
       unique: true
     },
 
+    tag: {
+      type: String,
+      required: true,
+      unique: true
+    },
+
+    description: {
+      type: String,
+      default: ""
+    },
+
     icon: {
       type: String,
       default: ""
     },
 
-    level: {
-      type: Number,
-      default: 1
-    },
-
-    xp: {
-      type: Number,
-      default: 0
+    leader: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
     },
 
     members: [
       {
-        user: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User"
-        },
-
-        role: {
-          type: String,
-          enum: [
-            "Leader",
-            "Co-Leader",
-            "Veteran",
-            "Member",
-            "New Recruit"
-          ],
-          default: "Member"
-        },
-
-        contributionXP: {
-          type: Number,
-          default: 0
-        }
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
       }
     ],
 
-    weeklyXP: {
+    totalXP: {
       type: Number,
       default: 0
+    },
+
+    memberContributions: {
+      type: Map,
+      of: Number,
+      default: {}
     }
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Guild", guildSchema);
+module.exports = mongoose.model("Guild", guildSchema);
